@@ -5,7 +5,7 @@
 xiangshan_blocks_dir := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # name of output pre-processed verilog file
-PREPROC_VERILOG = $(xiangshan_blocks_dir)/xiangshanBaseConfig.preprocessed.v
+PREPROC_VERILOG = $(xiangshan_blocks_dir)/xiangshan.preprocessed.v
 
 .PHONY: default $(PREPROC_VERILOG)
 default: $(PREPROC_VERILOG)
@@ -36,7 +36,7 @@ $(PREPROC_VERILOG): $(ALL_VSRCS)
 
 	mkdir -p $(dir $(PREPROC_VERILOG))
 	cat $(ALL_VSRCS) > combined.v
-	$(PREPROC_SCRIPT) combined.v $@ $(INC_DIRS)
+	python3 $(PREPROC_SCRIPT) combined.v $@ $(INC_DIRS)
 	rm -rf combined.v
 
 clean:

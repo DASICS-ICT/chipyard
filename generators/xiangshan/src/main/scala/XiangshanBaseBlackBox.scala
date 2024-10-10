@@ -82,10 +82,10 @@ class XSTile extends BlackBox with HasBlackBoxPath
   })
 
   val chipyardDir = System.getProperty("user.dir")
-  val xiangshanVsrcDir = s"$chipyardDir/generators/xiangshan/src/main/resources"
+  val xiangshanVsrcDir = s"$chipyardDir/generators/xiangshan/build"
 
   val proc = s"make -C $xiangshanVsrcDir"
   require(proc.! == 0, "Failed to run pre-processing step")
 
-  addPath(s"$xiangshanVsrcDir/xiangshanBaseConfig.preprocessed.v")
+  addPath(s"$xiangshanVsrcDir/xiangshan.preprocessed.v")
 }
