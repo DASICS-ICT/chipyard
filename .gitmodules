@@ -154,3 +154,6 @@
 [submodule "generators/xiangshan/xs-gen"]
 	path = generators/xiangshan/xs-gen
 	url = git@github.com:DASICS-ICT/xiangshan-dasics.git
+[submodule "generators/vexiiriscv"]
+	path = generators/vexiiriscv
+	url = https://github.com/ucb-bar/vexiiriscv-tile.git
