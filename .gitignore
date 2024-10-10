@@ -30,4 +30,4 @@ project/project/
 .classpath_cache/
 .vscode/
 tests/build/
-generators/xiangshan/build
+generators/xiangshan/src/main/resources

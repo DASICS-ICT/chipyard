@@ -6,7 +6,14 @@ import sys
 import re
 import os
 
-inVlog = "./build/XSTop.v"
+inVlog = "./xs-gen/build/XSTop.v"
+rename_flag = "./xs-gen/build/rename_complete"
+
+# Check if the rename has already been completed
+if os.path.exists(rename_flag):
+    print("[INFO] Renaming process already completed. Skipping...")
+    sys.exit(0)  # Exit the script if the renaming was already done
+
 print("[INFO] modules from: " + str(inVlog))
 
 replace_list = ["TLXbar", "TLFIFOFixer", "TLWidthWidget", "TLWidthWidget_1", "TLWidthWidget_2", "TLXbar_1", "TLXbar_2", "Queue", "Queue_1", "TLBuffer", "Repeater", "TLBuffer_2", "TLXbar_3", "TLXbar_4", "TLBuffer_5", "TLError", "TLBuffer_7", "Queue_16", "TLXbar_6", "TLBuffer_13", "QueueCompatibility", "AXI4UserYanker", "AXI4IdIndexer", "TLToAXI4", "SourceA", "SourceC", "SourceD", "SourceE", "Queue_24", "SinkA", "Queue_25", "SinkD", "Directory", "MSHR", "Scheduler", "TLBuffer_15", "TLBuffer_16", "IDPool", "TLCacheCork", "BankBinder", "TLXbar_7", "Queue_32", "LevelGateway", "PLICFanIn", "TLPLIC", "CLINT", "DMIToTL", "TLDebugModuleOuter", "TLBusBypassBar", "TLError_1", "TLBusBypass", "AsyncResetSynchronizerPrimitiveShiftReg_d3_i0", "AsyncResetSynchronizerShiftReg_w1_d3_i0", "AsyncResetSynchronizerShiftReg_w1_d3_i0_1", "JtagStateMachine", "CaptureUpdateChain_2", "JtagTapController", "JtagBypassChain", "DebugTransportModuleJTAG", "AsyncValidSync", "AsyncQueueSource", "ClockCrossingReg_w43", "AsyncQueueSink", "TLAsyncCrossingSource", "AsyncQueueSource_1", "TLDebugModuleOuterAsync", "TLDebugModuleInner", "ClockCrossingReg_w55", "AsyncQueueSink_1", "AsyncQueueSource_2", "TLAsyncCrossingSink", "ClockCrossingReg_w15", "AsyncQueueSink_2", "TLDebugModuleInnerAsync", "TLDebugModule", "CaptureUpdateChain", "CaptureUpdateChain_1", "CaptureChain"]
@@ -30,6 +37,11 @@ try:
         # Write the file out again
         with open(inVlog, 'w') as file:
             file.write(replaced_data)
+
+    # If everything is successful, create the rename_complete file
+    with open(rename_flag, 'w') as f:
+        f.write("Renaming complete.\n")
+    print("[INFO] Renaming process completed successfully.")
 
 except IOError as e:
     print(f"An error occurred while trying to read or write the file: {e}")

@@ -10,7 +10,7 @@ package xiangshan
 import chisel3._
 import chisel3.util.{log2Up}
 
-import freechips.rocketchip.config.{Parameters, Config, Field}
+import org.chipsalliance.cde.config.{Parameters, Config, Field}
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.rocket._
 import freechips.rocketchip.tile._
@@ -27,7 +27,7 @@ class WithNXiangshanCores(n: Int = 1, overrideIdOffset: Option[Int] = None) exte
     val idOffset = overrideIdOffset.getOrElse(prev.size)
     (0 until n).map { i =>
       XiangshanTileAttachParams(
-        tileParams = XiangshanTileParams(hartId = i + idOffset),
+        tileParams = XiangshanTileParams(tileId = i + idOffset),
         crossingParams = RocketCrossingParams()
       )
     } ++ prev

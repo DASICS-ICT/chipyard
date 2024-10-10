@@ -12,7 +12,7 @@ import chisel3.experimental.{IntParam, StringParam, RawParam}
 
 import scala.collection.mutable.{ListBuffer}
 
-import freechips.rocketchip.config._
+import org.chipsalliance.cde.config._
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.diplomacy._
@@ -20,17 +20,15 @@ import freechips.rocketchip.rocket._
 import freechips.rocketchip.subsystem.{RocketCrossingParams}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.interrupts._
+import freechips.rocketchip.prci._
 import freechips.rocketchip.util._
 import freechips.rocketchip.tile._
-import freechips.rocketchip.prci.ClockSinkParameters 
 
-
-case class XiangshanCoreParams(
-  bootFreqHz: BigInt = BigInt(1700000000),
-
+case class XiangshanCoreParams( // Minimal
+  bootFreqHz: BigInt = BigInt(50000000),
 ) extends CoreParams{
-  val decodeWidth: Int = 6
-  val fetchWidth: Int = 8
+  val decodeWidth: Int = 2
+  val fetchWidth: Int = 4
   val fpu: Option[FPUParams] = Some(FPUParams()) // copied fma latencies from Rocket
   val haveBasicCounters: Boolean = true
   val haveCFlush: Boolean = false
@@ -43,8 +41,8 @@ case class XiangshanCoreParams(
   val mtvecWritable: Boolean = true
   val mulDiv: Option[freechips.rocketchip.rocket.MulDivParams] = Some(MulDivParams(divEarlyOut=true))
   val nBreakpoints: Int = 0 // TODO Fix with better frontend breakpoint unit
-  val nL2TLBEntries: Int = 512
-  val nL2TLBWays: Int = 1
+  val nL2TLBEntries: Int = 16
+  val nL2TLBWays: Int = 4
   val nLocalInterrupts: Int = 0
   val nPMPs: Int = 8
   val nPTECacheEntries: Int = 8 // TODO: check
@@ -60,11 +58,18 @@ case class XiangshanCoreParams(
   val useHypervisor: Boolean = false
   val useNMI: Boolean = false
   val useRVE: Boolean = false
-  val useSCIE: Boolean =false
+  val useSCIE: Boolean = false
   val useSupervisor: Boolean = false
   val useUser: Boolean = true //TODO: check
   val useVM: Boolean = true
   val boundaryBuffers: Boolean = false // if synthesized with hierarchical PnR, cut feed-throughs?
+  val pgLevels: Int = 3
+  val traceHasWdata: Boolean = false
+  val useConditionalZero: Boolean = false
+  val useZba: Boolean = false
+  val useZbb: Boolean = false
+  val useZbs: Boolean = false
+  val xLen: Int = 64
 }
 
 
@@ -74,10 +79,12 @@ case class XiangshanCoreParams(
  */
 case class XiangshanTileParams(
   name: Option[String] = Some("xiangshan_tile"),
-  hartId: Int = 0,
+  tileId: Int = 0,
   val core: XiangshanCoreParams = XiangshanCoreParams()
 ) extends InstantiableTileParams[XiangshanTile]
 {
+  val baseName = "xiangshantile"
+  val uniqueName = s"${baseName}_$tileId"
   val beuAddr: Option[BigInt] = None
   val blockerCtrlAddr: Option[BigInt] = None
   val btb: Option[BTBParams] = None
@@ -85,7 +92,7 @@ case class XiangshanTileParams(
   val dcache: Option[DCacheParams] = None //already implemented
   val icache: Option[ICacheParams] = None //no icache, currently in draft so turning option off
   val clockSinkParams: ClockSinkParameters = ClockSinkParameters()
-  def instantiate(crossing: TileCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters): XiangshanTile = {
+  def instantiate(crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters): XiangshanTile = {
     new XiangshanTile(this, crossing, lookup)
   }
 }
@@ -111,11 +118,11 @@ class XiangshanTile private(
   with SinksExternalInterrupts
   with SourcesExternalNotifications
 {
-  def this(params: XiangshanTileParams, crossing: TileCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
+  def this(params: XiangshanTileParams, crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
     this(params, crossing.crossingType, lookup, p)
 
   //TileLink nodes
-  val intOutwardNode = IntIdentityNode()
+  val intOutwardNode = None
   val masterNode = visibilityNode
   val slaveNode = TLIdentityNode()
 
@@ -166,7 +173,7 @@ class XiangshanTile private(
   }
 
   ResourceBinding {
-    Resource(cpuDevice, "reg").bind(ResourceAddress(hartId))
+    Resource(cpuDevice, "reg").bind(ResourceAddress(tileId))
   }
 
   def connectXiangshanInterrupts(plic_0: Bool, plic_1: Bool, debug_0: Bool, clint_0: Bool, clint_1: Bool) {
